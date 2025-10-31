@@ -50,13 +50,21 @@ header {
     }
 }
 
-button {
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+button,
+.button-link {
     background: linear-gradient(to left, #646cff, #4338ca);
     color: #ffffff;
     padding: clamp(0.8rem, 2vw, 1.5rem);
     border: none;
     border-radius: 30px;
     font-size: clamp(14px, 2.5vw, 18px);
+    display: inline-block;
+    text-align: center;
 }
 
 section {
@@ -71,7 +79,8 @@ section {
         width: clamp(150px, 25vw, 300px);
         margin-left: 1.5rem;
     }
-    button {
+    button,
+    .button-link {
         margin-top: 1rem;
     }
     h3 {
@@ -81,8 +90,12 @@ section {
 }
 
 hr {
-    width: 150vw;
-    margin-left: -50vw;
+    position: relative;
+    left: 50%;
+    width: 100vw;
+    max-width: 100vw;
+    transform: translateX(-50%);
+    margin: 2rem 0;
     opacity: 0.25;
 }
 
@@ -113,7 +126,8 @@ section:nth-of-type(3) div {
 
 section:nth-of-type(3),
 section:nth-of-type(4),
-section:nth-of-type(5) {
+section:nth-of-type(5),
+section:last-of-type {
     gap: 0;
     h3 {
         padding-top: 1rem;
@@ -123,6 +137,11 @@ section:nth-of-type(5) {
         width: clamp(150px, 25vw, 300px);
         border-radius: 5%;
     }
+}
+
+section:last-of-type {
+    flex-direction: column;
+    align-items: flex-start;
 }
 
 footer {
@@ -144,10 +163,31 @@ footer {
     cursor: pointer;
 }
 
-button:hover {
+button:hover,
+.button-link:hover {
     background: linear-gradient(to right, #646cff, #9340ff);
     transform: scale(1.1);
     cursor: pointer;
+}
+
+.img-shadow {
+    box-shadow: rgba(240, 46, 170, 0.4) -5px 5px,
+        rgba(240, 46, 170, 0.3) -10px 10px, rgba(240, 46, 170, 0.2) -15px 15px,
+        rgba(240, 46, 170, 0.1) -20px 20px, rgba(240, 46, 170, 0.05) -25px 25px;
+    border-radius: 12%;
+}
+
+.ip-icon-bottom {
+    height: 60px;
+    width: 50px;
+}
+
+.envelope-icon {
+    width: 50px;
+}
+
+.github-icon {
+    width: 50px;
 }
 
 /* --------------    CAROUSEL     ----------------- */
@@ -241,5 +281,18 @@ button:hover {
     }
     100% {
         transform: rotate(360deg) scale(1.05);
+    }
+}
+
+/*-------------------------------- Extra Mobile responsiveness ----------------------------*/
+@media screen and (max-width: 510px) {
+    section:nth-of-type(3) {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+        img {
+            margin-left: 0;
+            margin-top: 1rem;
+        }
     }
 }

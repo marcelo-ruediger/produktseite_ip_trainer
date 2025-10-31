@@ -1,0 +1,67 @@
+.star-rating {
+    display: flex;
+    gap: 5vw;
+    flex-direction: row-reverse;
+    justify-content: left;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating label {
+    width: clamp(2rem, 3vw, 4rem);
+    height: clamp(2rem, 3vw, 4rem);
+    cursor: pointer;
+}
+
+.star-rating label::before {
+    content: "";
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-image: url("../images/star-solid-gold.svg");
+    opacity: 0.3;
+    transition: opacity 0.2s ease;
+}
+
+.star-rating input:checked ~ label::before,
+.star-rating label:hover::before,
+.star-rating label:hover ~ label:before {
+    opacity: 1;
+}
+
+.star-rating textarea,
+.star-rating button[type="submit"] {
+    display: none;
+    width: 100%;
+}
+
+.star-rating input:checked ~ textarea,
+.star-rating input:checked ~ button[type="submit"] {
+    display: block;
+    margin-right: auto;
+    max-width: 600px;
+}
+
+.star-rating textarea {
+    margin-top: 1rem;
+    padding: 1rem;
+    min-height: 120px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.star-rating textarea:focus {
+    outline: none;
+    border-color: #8b5cf6;
+}
+
+.star-rating textarea::placeholder {
+    color: #999;
+}

@@ -1,4 +1,66 @@
-<!--TODO: Nav Menu, Anchor links hinzufügen, <h3> text bei erste Section-->
+<?php 
+session_start(); // Start session for one-time messages
+require_once "config.php"; //Make sure the config file has the right name!
+// Connect
+$conn = new mysqli($DB_HOST, $DB_USER, $DB_PASS);
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Create Database if it doesn't exist
+$sql = "CREATE DATABASE IF NOT EXISTS test";
+$conn->query($sql);
+
+//Select the database
+$conn->select_db("test");
+
+// Create DB table if it doesn't exist 
+$sql_table = "CREATE TABLE IF NOT EXISTS rezensionen (
+id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+rating INT NOT NULL,
+comment VARCHAR(300),
+reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+)";
+
+$conn->query($sql_table);
+
+// Handle form submission
+if($_SERVER["REQUEST_METHOD"] == "POST") {
+    $rating = $_POST['rating'] ?? NULL;
+    $comment = $_POST['comment'] ?? '';
+
+    if ($rating) {
+        // do not pass directly the variable ratings and comment, risk of SQL Injectios. ? -> place holders
+        $stmt = $conn->prepare("INSERT INTO rezensionen (rating, comment) VALUES (?, ?)"); //use prepare then bind params
+        $stmt->bind_param("is", $rating, $comment); 
+
+        if ($stmt->execute()) {
+            // Save success message in session (will be shown once)
+            $_SESSION['success_message'] = "Vielen Dank für Ihre Bewertung!";
+            $stmt->close();
+            mysqli_close($conn);
+            
+            // Redirect to prevent reload resubmission (with anchor)
+            header("Location: index.php#rezensionen");
+            exit();
+        }
+        $stmt->close();
+    }
+}
+
+// Show success message from session (only once)
+$success_message = "";
+$error_message = "";
+
+if (isset($_SESSION['success_message'])) {
+    $success_message = $_SESSION['success_message'];
+    unset($_SESSION['success_message']); // Remove message after showing it once
+}
+
+mysqli_close($conn);
+
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -8,17 +70,18 @@
         <title>IP-Trainer Verkaufseite</title>
         <link rel="stylesheet" href="./css/main.css" />
         <link rel="stylesheet" href="./css/nav.css" />
+        <link rel="stylesheet" href="./css/ratings.css" />
     </head>
     <body>
         <header>
-            <h1 class="marke hover-effect">
+            <a href="#jetzt-herunterladen" class="marke hover-effect">
                 <img
                     src="./images/ip_icon_138457.png"
                     alt="IP icon"
                     class="white-icon"
                 />
                 TRAINER
-            </h1>
+            </a>
             <nav class="burger-nav">
                 <div class="burger-icon">
                     <span></span>
@@ -27,30 +90,33 @@
                 </div>
                 <ul class="nav-menu">
                     <li><a href="#features">Features</a></li>
-                    <li><a href="#about">About</a></li>
-                    <li><a href="#download">Download</a></li>
+                    <li>
+                        <a href="#jetzt-herunterladen">Download</a>
+                    </li>
+                    <li><a href="#rezensionen">Rezensionen</a></li>
                 </ul>
             </nav>
         </header>
         <main>
-            <section>
+            <section id="top-section">
                 <div>
-                    <h2>
+                    <h1>
                         <span class="purple-marker"
                             >Übung macht den Meister</span
                         >
-                        <br />
-                        IP-Training für die IHK direkt in deiner Tasche
-                    </h2>
+                    </h1>
+                    <br />
+                    <h2>IP-Training für die IHK direkt in deiner Tasche</h2>
                     <h3>
                         Lerne flexibel unterwegs und festige dein Wissen zu
                         Subnetting und IP-Adressen.
                     </h3>
-                    <button>Mehr erfahren</button>
+                    <a class="button-link" href="#features">Mehr erfahren</a>
                 </div>
                 <img
                     src="./images/app_phone.png"
                     alt="Phone with App running on screen"
+                    class="img-shadow"
                 />
             </section>
             <hr />
@@ -64,7 +130,9 @@
                     interaktivenIP Trainer. Schluss mit der Verwirrung bei CIDR,
                     Netz-IDs und Broadcast-Adressen.
                 </h3>
-                <button>Jetzt App holen</button>
+                <a class="button-link" href="#jetzt-herunterladen"
+                    >Jetzt App holen</a
+                >
             </section>
             <hr />
             <section>
@@ -87,7 +155,7 @@
                 </h3>
             </section>
             <hr />
-            <section>
+            <section id="features">
                 <h2><span class="purple-marker">Features</span></h2>
                 <div class="carousel">
                     <div class="carousel-container">
@@ -222,7 +290,7 @@
                 </div>
             </section>
             <hr />
-            <section>
+            <section id="jetzt-herunterladen">
                 <div>
                     <h2>
                         <span class="purple-marker">Starte jetzt</span> dein
@@ -233,30 +301,114 @@
                         Investiere in deine Fähigkeiten und sei auf jede
                         Netzwerk-Herausforderung vorbereitet
                     </h3>
-                    <button>Jetzt Herunterladen</button>
+                    <a
+                        class="button-link"
+                        href="https://marcelo-ruediger.github.io/ip_trainer/"
+                        target="_blank"
+                        >Jetzt Herunterladen</a
+                    >
                 </div>
                 <img
                     src="./images/app_phone.png"
                     alt="Hand holding Phone with App running on screen"
                 />
             </section>
+            <hr />
+            <section id="rezensionen">
+                <h2>
+                    <span class="purple-marker">Testemonials</span>
+                </h2>
+
+                <?php if ($success_message): ?>
+                    <div class="success-message" style="color: green; padding: 10px; margin: 10px 0;">
+                        ✅ <?php echo $success_message; ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($error_message): ?>
+                    <div class="error-message" style="color: red; padding: 10px; margin: 10px 0;">
+                        ❌ <?php echo $error_message; ?>
+                    </div>
+                <?php endif; ?>
+
+                <h3>
+                    Wir freuen uns über Ihre Bewertung: Bitte geben Sie uns 5
+                    Sterne, um unsere App zu verbessern.
+                </h3>
+                <form method="post" action="index.php">
+                    <div class="star-rating">
+                        <input
+                            type="radio"
+                            id="star5"
+                            name="rating"
+                            value="5"
+                        />
+                        <label for="star5"></label>
+                         <input
+                            type="radio"
+                            id="star4"
+                            name="rating"
+                            value="4"
+                        />
+                        <label for="star4"></label>
+                        <input
+                            type="radio"
+                            id="star3"
+                            name="rating"
+                            value="3"
+                        />
+                        <label for="star3"></label>
+                        <input
+                            type="radio"
+                            id="star2"
+                            name="rating"
+                            value="2"
+                        />
+                        <label for="star2"></label>
+                        <input
+                            type="radio"
+                            id="star1"
+                            name="rating"
+                            value="1"
+                        />
+                        <label for="star1"></label>
+                        <textarea
+                            name="comment"
+                            placeholder="Hinterlasse uns eine Nachricht (optional)..."
+                        ></textarea>
+                        <button type="submit">Jetzt bewerten</button>
+                    </div>
+                </form>
+            </section>
         </main>
         <footer>
-            <img
-                src="./images/ip_icon_138457.png"
-                alt="IP icon"
-                class="hover-effect"
-            />
-            <img
-                src="./images/envelope-solid-full.svg"
-                alt="Envelope Icon for contact"
-                class="hover-effect"
-            />
-            <img
-                src="./images/square-github-brands-solid-full.svg"
-                alt="Github Icon"
-                class="hover-effect"
-            />
+            <a href="#top-section">
+                <img
+                    src="./images/ip_icon_138457.png"
+                    alt="IP icon"
+                    class="hover-effect ip-icon-bottom"
+                />
+            </a>
+            <a
+                href="https://github.com/marcelo-ruediger/ip_trainer/issues/new"
+                target="_blank"
+            >
+                <img
+                    src="./images/envelope-solid-full.svg"
+                    alt="Envelope Icon for contact"
+                    class="hover-effect envelope-icon"
+                />
+            </a>
+            <a
+                href="https://github.com/marcelo-ruediger/ip_trainer"
+                target="_blank"
+            >
+                <img
+                    src="./images/square-github-brands-solid-full.svg"
+                    alt="Github Icon"
+                    class="hover-effect github-icon"
+                />
+            </a>
         </footer>
         <script src="./js/carousel.js"></script>
     </body>

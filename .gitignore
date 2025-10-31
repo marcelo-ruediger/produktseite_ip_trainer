@@ -1,0 +1,6 @@
+# Ignore real configuration file
+config.php
+
+#Ignore system files
+.DS_Store
+Thumbs.db
