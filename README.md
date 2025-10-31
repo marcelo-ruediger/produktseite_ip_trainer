@@ -2,10 +2,6 @@
 
 A simple product page practice project for the IP Trainer App, built to review PHP concepts and database connectivity using MySQLi.
 
-## 🌐 Live Demo
-
-The page is live at: [https://marcelo-ruediger.github.io/produktseite_ip_trainer/](https://marcelo-ruediger.github.io/produktseite_ip_trainer/)
-
 ## 🚀 Setup
 
 1. Clone or download this repository
