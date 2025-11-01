@@ -1,6 +1,13 @@
-# Ignore real configuration file
+# Ignore real configuration files with credentials
 config.php
+.env
 
-#Ignore system files
+# Ignore system files
 .DS_Store
 Thumbs.db
+
+# Ignore Vercel local files
+.vercel
+
+# Ignore logs
+*.log

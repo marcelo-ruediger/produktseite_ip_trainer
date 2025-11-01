@@ -1,29 +1,51 @@
 <?php 
 session_start(); // Start session for one-time messages
-require_once "config.php"; //Make sure the config file has the right name!
-// Connect
-$conn = new mysqli($DB_HOST, $DB_USER, $DB_PASS);
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+
+// Use Vercel config if deployed on Vercel, otherwise use local config
+if (isset($_ENV['VERCEL']) || getenv('VERCEL')) {
+    require_once "config.vercel.php";
+} else if (file_exists("config.php")) {
+    require_once "config.php";
+} else {
+    require_once "config.example.php";
 }
+// Initialize database connection
+$conn = null;
+$db_available = false;
 
-// Create Database if it doesn't exist
-$sql = "CREATE DATABASE IF NOT EXISTS test";
-$conn->query($sql);
+// Only attempt database connection if all credentials are available
+if ($DB_HOST && $DB_USER && $DB_PASS && $DB_NAME) {
+    try {
+        // Connect
+        $conn = new mysqli($DB_HOST, $DB_USER, $DB_PASS);
+        // Check connection
+        if ($conn->connect_error) {
+            throw new Exception("Connection failed: " . $conn->connect_error);
+        }
 
-//Select the database
-$conn->select_db("test");
+        // Create Database if it doesn't exist
+        $sql = "CREATE DATABASE IF NOT EXISTS test";
+        $conn->query($sql);
 
-// Create DB table if it doesn't exist 
-$sql_table = "CREATE TABLE IF NOT EXISTS rezensionen (
-id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-rating INT NOT NULL,
-comment VARCHAR(300),
-reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-)";
+        //Select the database
+        $conn->select_db("test");
 
-$conn->query($sql_table);
+        // Create DB table if it doesn't exist 
+        $sql_table = "CREATE TABLE IF NOT EXISTS rezensionen (
+        id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        rating INT NOT NULL,
+        comment VARCHAR(300),
+        reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )";
+
+        $conn->query($sql_table);
+        $db_available = true;
+    } catch (Exception $e) {
+        // Database not available, continue without it
+        $db_available = false;
+        error_log("Database connection failed: " . $e->getMessage());
+    }
+}
 
 // Handle form submission
 if($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -31,21 +53,30 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
     $comment = $_POST['comment'] ?? '';
 
     if ($rating) {
-        // do not pass directly the variable ratings and comment, risk of SQL Injectios. ? -> place holders
-        $stmt = $conn->prepare("INSERT INTO rezensionen (rating, comment) VALUES (?, ?)"); //use prepare then bind params
-        $stmt->bind_param("is", $rating, $comment); 
+        if ($db_available && $conn) {
+            // do not pass directly the variable ratings and comment, risk of SQL Injectios. ? -> place holders
+            $stmt = $conn->prepare("INSERT INTO rezensionen (rating, comment) VALUES (?, ?)"); //use prepare then bind params
+            $stmt->bind_param("is", $rating, $comment); 
 
-        if ($stmt->execute()) {
-            // Save success message in session (will be shown once)
-            $_SESSION['success_message'] = "Vielen Dank für Ihre Bewertung!";
+            if ($stmt->execute()) {
+                // Save success message in session (will be shown once)
+                $_SESSION['success_message'] = "Vielen Dank für Ihre Bewertung!";
+                $stmt->close();
+                mysqli_close($conn);
+                
+                // Redirect to prevent reload resubmission (with anchor)
+                header("Location: index.php#rezensionen");
+                exit();
+            }
             $stmt->close();
-            mysqli_close($conn);
+        } else {
+            // Database not available, show thank you message anyway
+            $_SESSION['success_message'] = "Vielen Dank für Ihre Bewertung! (Demo-Modus - Bewertung wurde nicht gespeichert)";
             
             // Redirect to prevent reload resubmission (with anchor)
             header("Location: index.php#rezensionen");
             exit();
         }
-        $stmt->close();
     }
 }
 
@@ -58,7 +89,10 @@ if (isset($_SESSION['success_message'])) {
     unset($_SESSION['success_message']); // Remove message after showing it once
 }
 
-mysqli_close($conn);
+// Close database connection if it exists
+if ($conn) {
+    mysqli_close($conn);
+}
 
 ?>
 
