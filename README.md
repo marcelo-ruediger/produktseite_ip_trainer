@@ -5,8 +5,8 @@ A simple product page practice project for the IP Trainer App, built to review P
 ## Setup
 
 1. Clone or download this repository
-2. Copy `config.example.php` to `config.php`
-3. Update `config.php` with your MySQL database credentials:
+2. Copy `config.example.php` to `config.php` **or** copy `.env.example` to `.env`
+3. Update the copied file with your MySQL database credentials:
     ```php
     $DB_HOST = "your_host";
     $DB_USER = "your_username";
@@ -15,6 +15,8 @@ A simple product page practice project for the IP Trainer App, built to review P
     ```
 4. Ensure your web server has PHP and MySQLi extension enabled
 5. Access `index.php` through your web server
+
+> **Security:** `config.php` and `.env` contain real credentials and are listed in `.gitignore`, so they are never committed to Git or uploaded to GitHub. Only the placeholder templates (`config.example.php`, `.env.example`) are tracked.
 
 ## Technology Stack
 

@@ -1,13 +1,20 @@
 # Ignore real configuration files with credentials
 config.php
+config.*.local.php
+
+# Ignore environment files containing secrets
 .env
+.env.*
+!.env.example
+*.env
 
 # Ignore system files
 .DS_Store
 Thumbs.db
 
-# Ignore Vercel local files
+# Ignore Vercel local files and link data (contains project/org IDs)
 .vercel
+vercel/
 
 # Ignore logs
 *.log

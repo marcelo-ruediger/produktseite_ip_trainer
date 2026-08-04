@@ -7,7 +7,27 @@ if (isset($_ENV['VERCEL']) || getenv('VERCEL')) {
 } else if (file_exists("config.php")) {
     require_once "config.php";
 } else {
-    require_once "config.example.php";
+    // Load credentials from local .env file (never committed to git)
+    $envFile = __DIR__ . "/.env";
+    if (file_exists($envFile)) {
+        foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $envLine) {
+            $envLine = trim($envLine);
+            if ($envLine === "" || $envLine[0] === "#") {
+                continue;
+            }
+            [$envKey, $envValue] = array_pad(explode("=", $envLine, 2), 2, "");
+            $envKey = trim($envKey);
+            $envValue = trim($envValue, "\"'");
+            if ($envKey !== "") {
+                putenv("$envKey=$envValue");
+                $_ENV[$envKey] = $envValue;
+            }
+        }
+    }
+    $DB_HOST = $_ENV['DB_HOST'] ?? getenv('DB_HOST') ?? "localhost";
+    $DB_USER = $_ENV['DB_USER'] ?? getenv('DB_USER') ?? null;
+    $DB_PASS = $_ENV['DB_PASS'] ?? getenv('DB_PASS') ?? null;
+    $DB_NAME = $_ENV['DB_NAME'] ?? getenv('DB_NAME') ?? null;
 }
 // Initialize database connection
 $conn = null;
